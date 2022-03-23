@@ -23,3 +23,15 @@ echo 'export LANG=C.UTF-8' >> ~/.bashrc
 cd ~
 git clone https://github.com/EleutherAI/gpt-neox.git
 cd ~/gpt-neox && sudo python ~/gpt-neox/megatron/fused_kernels/setup.py install
+
+# Start SSH service
+service ssh start
+
+# For EFA
+echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH" >> .deepspeed_env
+
+# Loop to prevent pod shutdown
+echo '------------------Ready-------------------'
+while true; do
+  sleep 30;
+done;
