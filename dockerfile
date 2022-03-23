@@ -14,6 +14,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --allow-unauthenticated \
     gcc \
     vim \
     kmod \
+    sudo \
     openssh-client \
     openssh-server \
     build-essential \
@@ -25,7 +26,9 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --allow-unauthenticated \
     python3-distutils \
     cmake \
     apt-utils \
-    python3-dev
+    python3-dev \
+    pdsh \
+    nano
 
 RUN mkdir -p /var/run/sshd
 RUN sed -i 's/[ #]\(.*StrictHostKeyChecking \).*/ \1no/g' /etc/ssh/ssh_config && \
@@ -87,6 +90,21 @@ RUN useradd --create-home --uid 1000 --shell /bin/bash mchorse && \
     usermod -aG sudo mchorse && \
     echo "mchorse ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
+### SSH
+# Set password
+RUN echo 'password' >> password.txt && \
+    echo "root:`cat password.txt`" | chpasswd && \
+    # Allow root login with password
+    sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    # Prevent user being kicked off after login
+    sed -i 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' /etc/pam.d/sshd && \
+    echo 'AuthorizedKeysFile     .ssh/authorized_keys' >> /etc/ssh/sshd_config && \
+    echo 'PasswordAuthentication yes' >> /etc/ssh/sshd_config && \
+    # FIX SUDO BUG: https://github.com/sudo-project/sudo/issues/42
+    echo "Set disable_coredump false" >> /etc/sudo.conf && \
+    # Clean up
+    rm password.txt
+
 ## SSH config and bashrc
 RUN mkdir -p /home/mchorse/.ssh /job && \
     echo 'Host *' > /home/mchorse/.ssh/config && \
@@ -112,20 +130,20 @@ RUN pip3 install torch==1.10.2+cu113 torchvision==0.11.3+cu113 torchaudio===0.10
 
 RUN git clone https://github.com/EleutherAI/gpt-neox.git $HOME/gpt-neox \
     && cd $HOME/gpt-neox/ \
-    && pip3 install -r requirements/requirements.txt && pip3 install -r requirements/requirements-onebitadam.txt && pip3 install -r requirements/requirements-sparseattention.txt && pip cache purge
-    #&& python .megatron/fused_kernels/setup.py install
+    && pip3 install -r requirements/requirements.txt && pip3 install -r requirements/requirements-onebitadam.txt && pip3 install -r requirements/requirements-sparseattention.txt && pip cache purge \
+    && python3 megatron/fused_kernels/setup.py install
 
 
-# For EFA
-#COPY /home/shivanshu/infra-management/specs/.deepspeed_env .deepspeed_env
+# mchorse
+USER mchorse
+WORKDIR /home/mchorse
 
-# post_start script
-COPY script.sh ./script.sh
-RUN chmod +x ./script.sh
-RUN ./script.sh
-
-# For intrapod SSH
+# For intrapod ssh
 EXPOSE 22
 
+# post_start script
+ADD script.sh ./script.sh
+COPY script.sh ./script.sh
+RUN sudo chmod +x ./script.sh
 # Starting scripts
-ENTRYPOINT ["/usr/sbin/sshd", "De"]
+ENTRYPOINT ["sh", "script.sh"]
