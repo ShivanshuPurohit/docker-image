@@ -1,8 +1,12 @@
-FROM nvcr.io/nvidia/cuda:11.4.1-cudnn8-devel-ubuntu20.04
+FROM nvcr.io/nvidia/cuda:11.3.1-cudnn8-devel-ubuntu20.04
 
 ARG EFA_INSTALLER_VERSION=latest
 ARG AWS_OFI_NCCL_VERSION=aws
 ARG NCCL_TESTS_VERSION=master
+
+RUN apt-get install -y --no-install-recommends ca-certificates && \
+rm -rf /var/lib/apt/lists/* \
+&& update-ca-certificates
 
 RUN apt-get update -y
 RUN apt-get remove -y --allow-change-held-packages \
@@ -30,6 +34,9 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --allow-unauthenticated \
     pdsh \
     nano
 
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 1 && \
+    update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1 &&
+
 RUN mkdir -p /var/run/sshd
 RUN sed -i 's/[ #]\(.*StrictHostKeyChecking \).*/ \1no/g' /etc/ssh/ssh_config && \
     echo "    UserKnownHostsFile /dev/null" >> /etc/ssh/ssh_config && \
@@ -38,8 +45,8 @@ ENV LD_LIBRARY_PATH /usr/local/cuda/extras/CUPTI/lib64:/opt/amazon/openmpi/lib:/
 ENV PATH /opt/amazon/openmpi/bin/:/opt/amazon/efa/bin:/usr/bin:/usr/local/bin:$PATH
 
 RUN curl https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py \
-    && python3 /tmp/get-pip.py \
-    && pip3 install awscli pynvml
+    && python /tmp/get-pip.py \
+    && pip install awscli pynvml
 
 #################################################
 ## Install EFA installer
@@ -121,7 +128,7 @@ RUN cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys
 RUN touch /root/.ssh/config
 RUN chmod 700 /root/.ssh/config
 
-RUN pip3 install torch==1.10.2+cu113 torchvision==0.11.3+cu113 torchaudio===0.10.2+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html
+RUN pip install torch==1.10.2+cu113 torchvision==0.11.3+cu113 torchaudio===0.10.2+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html
 ## Install APEX
 ## we use the latest git clone and edit the setup.py, to disable the check around line 102
 #RUN git clone https://github.com/NVIDIA/apex.git $HOME/apex \
@@ -130,8 +137,8 @@ RUN pip3 install torch==1.10.2+cu113 torchvision==0.11.3+cu113 torchaudio===0.10
 
 RUN git clone https://github.com/EleutherAI/gpt-neox.git $HOME/gpt-neox \
     && cd $HOME/gpt-neox/ \
-    && pip3 install -r requirements/requirements.txt && pip3 install -r requirements/requirements-onebitadam.txt && pip3 install -r requirements/requirements-sparseattention.txt && pip cache purge \
-    && python3 megatron/fused_kernels/setup.py install
+    && pip install -r requirements/requirements.txt && pip3 install -r requirements/requirements-onebitadam.txt && pip3 install -r requirements/requirements-sparseattention.txt && pip cache purge \
+    && python megatron/fused_kernels/setup.py install
 
 
 # mchorse
@@ -140,10 +147,3 @@ WORKDIR /home/mchorse
 
 # For intrapod ssh
 EXPOSE 22
-
-# post_start script
-ADD script.sh ./script.sh
-COPY script.sh ./script.sh
-RUN sudo chmod +x ./script.sh
-# Starting scripts
-ENTRYPOINT ["sh", "script.sh"]
