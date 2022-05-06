@@ -4,6 +4,7 @@ ARG EFA_INSTALLER_VERSION=latest
 ARG AWS_OFI_NCCL_VERSION=aws
 ARG NCCL_TESTS_VERSION=master
 ENV DEBIAN_FRONTEND=noninteractive
+#execute
 
 RUN apt-get install -y --no-install-recommends ca-certificates && \
 rm -rf /var/lib/apt/lists/* \
@@ -45,6 +46,8 @@ RUN mkdir /var/run/sshd && \
     # Prevent user being kicked off after login
     sed -i 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' /etc/pam.d/sshd && \
     echo 'AuthorizedKeysFile     .ssh/authorized_keys' >> /etc/ssh/sshd_config && \
+    # FIX SUDO BUG: https://github.com/sudo-project/sudo/issues/42
+    sudo echo "Set disable_coredump false" >> /etc/sudo.conf
 
 ENV LD_LIBRARY_PATH /usr/local/cuda/extras/CUPTI/lib64:/opt/amazon/openmpi/lib:/opt/nccl/build/lib:/opt/amazon/efa/lib:/opt/aws-ofi-nccl/install/lib:$LD_LIBRARY_PATH
 ENV PATH /opt/amazon/openmpi/bin/:/opt/amazon/efa/bin:/usr/bin:/usr/local/bin:$PATH
@@ -108,10 +111,10 @@ RUN groupadd --gid $USER_GID $USERNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME
 
 RUN chmod g+rw /home && \
-    mkdir -p /home/xuser && \
-    mkdir -p /home/xuser/.ssh && \
-    chown -R $USERNAME:$USERNAME /home/xuser && \
-    chown -R $USERNAME:$USERNAME /home/xuser/.ssh
+    mkdir -p /home/mchorse && \
+    mkdir -p /home/mchorse/.ssh && \
+    chown -R $USERNAME:$USERNAME /home/mchorse && \
+    chown -R $USERNAME:$USERNAME /home/mchorse/.ssh
 
 USER $USERNAME
 
@@ -119,7 +122,7 @@ USER $USERNAME
 # Create keys
 RUN sudo chmod 700 /home/mchorse/.ssh
 RUN ssh-keygen -t rsa -N "" -f /home/mchorse/.ssh/id_rsa && sudo chmod 600 /home/mchorse/.ssh/id_rsa && sudo chmod 600 /home/mchorse/.ssh/id_rsa.pub
-RUN cp /home/mchorse/.ssh/id_rsa.pub /home/xuser/.ssh/authorized_keys
+RUN cp /home/mchorse/.ssh/id_rsa.pub /home/mchorse/.ssh/authorized_keys
 RUN eval `ssh-agent -s` && ssh-add /home/mchorse/.ssh/id_rsa
 
 USER root
@@ -143,8 +146,7 @@ RUN pip install torch==1.10.2+cu113 torchvision==0.11.3+cu113 torchaudio===0.10.
 
 RUN git clone https://github.com/EleutherAI/gpt-neox.git $HOME/gpt-neox \
     && cd $HOME/gpt-neox/ \
-    && pip install -r requirements/requirements.txt && pip3 install -r requirements/requirements-onebitadam.txt && pip3 install -r requirements/requirements-sparseattention.txt && pip cache purge \
-    && python megatron/fused_kernels/setup.py install
+    && pip install -r requirements/requirements.txt && pip3 install -r requirements/requirements-onebitadam.txt && pip3 install -r requirements/requirements-sparseattention.txt && pip cache purge
 
 # mchorse
 USER mchorse
