@@ -146,8 +146,7 @@ RUN pip install torch==1.10.2+cu113 torchvision==0.11.3+cu113 torchaudio===0.10.
 
 RUN git clone https://github.com/EleutherAI/gpt-neox.git $HOME/gpt-neox \
     && cd $HOME/gpt-neox/ \
-    && pip install -r requirements/requirements.txt && pip3 install -r requirements/requirements-onebitadam.txt && pip3 install -r requirements/requirements-sparseattention.txt && pip cache purge \
-    && python megatron/fused_kernels/setup.py install
+    && pip install -r requirements/requirements.txt && pip3 install -r requirements/requirements-onebitadam.txt && pip3 install -r requirements/requirements-sparseattention.txt && pip cache purge
 
 # mchorse
 USER mchorse
