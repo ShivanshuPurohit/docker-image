@@ -3,6 +3,7 @@ FROM nvcr.io/nvidia/cuda:11.3.1-cudnn8-devel-ubuntu20.04
 ARG EFA_INSTALLER_VERSION=latest
 ARG AWS_OFI_NCCL_VERSION=aws
 ARG NCCL_TESTS_VERSION=master
+ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get install -y --no-install-recommends ca-certificates && \
 rm -rf /var/lib/apt/lists/* \
@@ -13,14 +14,17 @@ RUN apt-get remove -y --allow-change-held-packages \
                       libmlx5-1 ibverbs-utils libibverbs-dev libibverbs1 \
                       libnccl2 libnccl-dev
 
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --allow-unauthenticated \
+#Install core packages
+RUN apt-get install -y --allow-unauthenticated \
     git \
     gcc \
     vim \
     kmod \
     sudo \
-    openssh-client \
-    openssh-server \
+    ssh \
+    apt-utils \
+    libncurses5 \
+    ca-certificates \
     build-essential \
     curl \
     autoconf \
