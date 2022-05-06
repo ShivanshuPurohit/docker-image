@@ -111,10 +111,10 @@ RUN groupadd --gid $USER_GID $USERNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME
 
 RUN chmod g+rw /home && \
-    mkdir -p /home/xuser && \
-    mkdir -p /home/xuser/.ssh && \
-    chown -R $USERNAME:$USERNAME /home/xuser && \
-    chown -R $USERNAME:$USERNAME /home/xuser/.ssh
+    mkdir -p /home/mchorse && \
+    mkdir -p /home/mchorse/.ssh && \
+    chown -R $USERNAME:$USERNAME /home/mchorse && \
+    chown -R $USERNAME:$USERNAME /home/mchorse/.ssh
 
 USER $USERNAME
 
@@ -122,7 +122,7 @@ USER $USERNAME
 # Create keys
 RUN sudo chmod 700 /home/mchorse/.ssh
 RUN ssh-keygen -t rsa -N "" -f /home/mchorse/.ssh/id_rsa && sudo chmod 600 /home/mchorse/.ssh/id_rsa && sudo chmod 600 /home/mchorse/.ssh/id_rsa.pub
-RUN cp /home/mchorse/.ssh/id_rsa.pub /home/xuser/.ssh/authorized_keys
+RUN cp /home/mchorse/.ssh/id_rsa.pub /home/mchorse/.ssh/authorized_keys
 RUN eval `ssh-agent -s` && ssh-add /home/mchorse/.ssh/id_rsa
 
 USER root
