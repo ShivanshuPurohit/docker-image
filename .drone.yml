@@ -1,0 +1,26 @@
+kind: pipeline
+name: default
+
+steps:
+
+- name: docker  
+  image: plugins/docker
+  mem_limit: 1000000000000
+  volumes:
+  - name: docker_sock
+    path: /var/run/docker.sock
+  
+  settings:
+    username:
+      from_secret: docker_username
+    password:
+      from_secret: docker_password
+
+    repo: shivanshupurohit/gpt-neox
+    tags: ${DRONE_BUILD_NUMBER}
+    use_cache: true
+    
+volumes:
+  - name: docker_sock
+    host:
+      path: /var/run/docker.sock
