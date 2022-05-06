@@ -3,6 +3,7 @@ FROM nvcr.io/nvidia/cuda:11.3.1-cudnn8-devel-ubuntu20.04
 ARG EFA_INSTALLER_VERSION=latest
 ARG AWS_OFI_NCCL_VERSION=aws
 ARG NCCL_TESTS_VERSION=master
+ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get install -y --no-install-recommends ca-certificates && \
 rm -rf /var/lib/apt/lists/* \
@@ -13,14 +14,18 @@ RUN apt-get remove -y --allow-change-held-packages \
                       libmlx5-1 ibverbs-utils libibverbs-dev libibverbs1 \
                       libnccl2 libnccl-dev
 
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --allow-unauthenticated \
+#Install core packages
+RUN apt-get install -y --allow-unauthenticated \
     git \
     gcc \
     vim \
     kmod \
     sudo \
-    openssh-client \
-    openssh-server \
+    ssh \
+    apt-utils \
+    libncurses5 \
+    bash \
+    ca-certificates \
     build-essential \
     curl \
     autoconf \
@@ -36,10 +41,11 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --allow-unauthenticated \
 
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 1
 
-RUN mkdir -p /var/run/sshd
-RUN sed -i 's/[ #]\(.*StrictHostKeyChecking \).*/ \1no/g' /etc/ssh/ssh_config && \
-    echo "    UserKnownHostsFile /dev/null" >> /etc/ssh/ssh_config && \
-    sed -i 's/#\(StrictModes \).*/\1no/g' /etc/ssh/sshd_config
+RUN mkdir /var/run/sshd && \
+    # Prevent user being kicked off after login
+    sed -i 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' /etc/pam.d/sshd && \
+    echo 'AuthorizedKeysFile     .ssh/authorized_keys' >> /etc/ssh/sshd_config && \
+
 ENV LD_LIBRARY_PATH /usr/local/cuda/extras/CUPTI/lib64:/opt/amazon/openmpi/lib:/opt/nccl/build/lib:/opt/amazon/efa/lib:/opt/aws-ofi-nccl/install/lib:$LD_LIBRARY_PATH
 ENV PATH /opt/amazon/openmpi/bin/:/opt/amazon/efa/bin:/usr/bin:/usr/local/bin:$PATH
 
@@ -90,26 +96,33 @@ RUN git clone https://github.com/NVIDIA/nccl-tests.git /opt/nccl-tests \
 ENV NCCL_PROTO simple
 RUN rm -rf /var/lib/apt/lists/*
 
-
 #### User account
-RUN useradd --create-home --uid 1000 --shell /bin/bash mchorse && \
-    usermod -aG sudo mchorse && \
-    echo "mchorse ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+ARG USERNAME=mchorse
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
+
+# Creating the user and usergroup
+RUN groupadd --gid $USER_GID $USERNAME \
+    && useradd --uid $USER_UID --gid $USERNAME -m $USERNAME \
+    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+    && chmod 0440 /etc/sudoers.d/$USERNAME
+
+RUN chmod g+rw /home && \
+    mkdir -p /home/xuser && \
+    mkdir -p /home/xuser/.ssh && \
+    chown -R $USERNAME:$USERNAME /home/xuser && \
+    chown -R $USERNAME:$USERNAME /home/xuser/.ssh
+
+USER $USERNAME
 
 ### SSH
-# Set password
-RUN echo 'password' >> password.txt && \
-    echo "root:`cat password.txt`" | chpasswd && \
-    # Allow root login with password
-    sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config && \
-    # Prevent user being kicked off after login
-    sed -i 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' /etc/pam.d/sshd && \
-    echo 'AuthorizedKeysFile     .ssh/authorized_keys' >> /etc/ssh/sshd_config && \
-    echo 'PasswordAuthentication yes' >> /etc/ssh/sshd_config && \
-    # FIX SUDO BUG: https://github.com/sudo-project/sudo/issues/42
-    echo "Set disable_coredump false" >> /etc/sudo.conf && \
-    # Clean up
-    rm password.txt
+# Create keys
+RUN sudo chmod 700 /home/mchorse/.ssh
+RUN ssh-keygen -t rsa -N "" -f /home/mchorse/.ssh/id_rsa && sudo chmod 600 /home/mchorse/.ssh/id_rsa && sudo chmod 600 /home/mchorse/.ssh/id_rsa.pub
+RUN cp /home/mchorse/.ssh/id_rsa.pub /home/xuser/.ssh/authorized_keys
+RUN eval `ssh-agent -s` && ssh-add /home/mchorse/.ssh/id_rsa
+
+USER root
 
 ## SSH config and bashrc
 RUN mkdir -p /home/mchorse/.ssh /job && \
@@ -120,12 +133,6 @@ RUN mkdir -p /home/mchorse/.ssh /job && \
     echo 'export PATH=/usr/local/mpi/bin:$PATH' >> /home/mchorse/.bashrc && \
     echo 'export LD_LIBRARY_PATH=/usr/local/lib:/usr/local/mpi/lib:/usr/local/mpi/lib64:$LD_LIBRARY_PATH' >> /home/mchorse/.bashrc
 
-
-# Generate keys for intra-pod ssh coms
-RUN ssh-keygen -b 2048 -t rsa -f /root/.ssh/id_rsa -q -N ""
-RUN cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys
-RUN touch /root/.ssh/config
-RUN chmod 700 /root/.ssh/config
 
 RUN pip install torch==1.10.2+cu113 torchvision==0.11.3+cu113 torchaudio===0.10.2+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html
 ## Install APEX
@@ -138,7 +145,6 @@ RUN git clone https://github.com/EleutherAI/gpt-neox.git $HOME/gpt-neox \
     && cd $HOME/gpt-neox/ \
     && pip install -r requirements/requirements.txt && pip3 install -r requirements/requirements-onebitadam.txt && pip3 install -r requirements/requirements-sparseattention.txt && pip cache purge \
     && python megatron/fused_kernels/setup.py install
-
 
 # mchorse
 USER mchorse
