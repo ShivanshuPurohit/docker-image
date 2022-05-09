@@ -141,9 +141,9 @@ RUN git clone https://github.com/EleutherAI/gpt-neox.git $HOME/gpt-neox \
     && cd $HOME/gpt-neox/ \
     && pip install -r requirements/requirements.txt && pip3 install -r requirements/requirements-onebitadam.txt && pip3 install -r requirements/requirements-sparseattention.txt && pip cache purge
 
-# mchorse
-USER mchorse
-WORKDIR /home/mchorse
+# user
+USER root
+WORKDIR /home/root
 
 # For intrapod ssh
 EXPOSE 22
