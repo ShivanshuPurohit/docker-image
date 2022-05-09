@@ -122,6 +122,7 @@ USER $USERNAME
 # Create keys
 RUN ssh-keygen -b 2048 -t rsa -f ~/.ssh/id_rsa -q -N ""
 RUN cp ~/.ssh/id_rsa.pub ~/.ssh/authorized_keys
+RUN echo "StrictHostKeyChecking no" > ~/.ssh/config
 RUN chmod 700 ~/.ssh/config
 USER root
 
