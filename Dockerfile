@@ -138,6 +138,7 @@ RUN mkdir -p /home/mchorse/.ssh /job && \
 
 
 RUN pip install torch==1.10.2+cu113 torchvision==0.11.3+cu113 torchaudio===0.10.2+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html
+RUN pip install gpustat
 ## Install APEX
 ## we use the latest git clone and edit the setup.py, to disable the check around line 102
 #RUN git clone https://github.com/NVIDIA/apex.git $HOME/apex \
