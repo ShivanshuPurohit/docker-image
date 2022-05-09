@@ -116,7 +116,7 @@ RUN chmod g+rw /home && \
     chown -R $USERNAME:$USERNAME /home/mchorse && \
     chown -R $USERNAME:$USERNAME /home/mchorse/.ssh
 
-USER $USERNAME
+USER root
 
 ## SSH config and bashrc
 RUN mkdir -p /home/mchorse/.ssh /job && \
@@ -129,6 +129,7 @@ RUN mkdir -p /home/mchorse/.ssh /job && \
 
 ### SSH
 # Create keys
+USER mchorse
 RUN ssh-keygen -b 2048 -t rsa -f ~/.ssh/id_rsa -q -N ""
 RUN cp ~/.ssh/id_rsa.pub ~/.ssh/authorized_keys
 RUN echo "StrictHostKeyChecking no" > ~/.ssh/config
