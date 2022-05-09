@@ -118,14 +118,6 @@ RUN chmod g+rw /home && \
 
 USER $USERNAME
 
-### SSH
-# Create keys
-RUN ssh-keygen -b 2048 -t rsa -f ~/.ssh/id_rsa -q -N ""
-RUN cp ~/.ssh/id_rsa.pub ~/.ssh/authorized_keys
-RUN echo "StrictHostKeyChecking no" > ~/.ssh/config
-RUN chmod 700 ~/.ssh/config
-USER root
-
 ## SSH config and bashrc
 RUN mkdir -p /home/mchorse/.ssh /job && \
     echo 'Host *' > /home/mchorse/.ssh/config && \
@@ -135,6 +127,13 @@ RUN mkdir -p /home/mchorse/.ssh /job && \
     echo 'export PATH=/usr/local/mpi/bin:$PATH' >> /home/mchorse/.bashrc && \
     echo 'export LD_LIBRARY_PATH=/usr/local/lib:/usr/local/mpi/lib:/usr/local/mpi/lib64:$LD_LIBRARY_PATH' >> /home/mchorse/.bashrc
 
+### SSH
+# Create keys
+RUN ssh-keygen -b 2048 -t rsa -f ~/.ssh/id_rsa -q -N ""
+RUN cp ~/.ssh/id_rsa.pub ~/.ssh/authorized_keys
+RUN echo "StrictHostKeyChecking no" > ~/.ssh/config
+RUN chmod 700 ~/.ssh/config
+USER root
 
 RUN pip install torch==1.10.2+cu113 torchvision==0.11.3+cu113 torchaudio===0.10.2+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html
 ## Install APEX
