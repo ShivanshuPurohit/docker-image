@@ -102,7 +102,7 @@ RUN rm -rf /var/lib/apt/lists/*
 ## SSH
 # Set password
 RUN echo 'password' >> password.txt && \
-    mkdir /var/run/sshd && \
+    touch /var/run/sshd && \
     echo "root:`cat password.txt`" | chpasswd && \
     # Allow root login with password
     sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config && \
