@@ -99,42 +99,36 @@ RUN git clone https://github.com/NVIDIA/nccl-tests.git /opt/nccl-tests \
 ENV NCCL_PROTO simple
 RUN rm -rf /var/lib/apt/lists/*
 
-#### User account
-ARG USERNAME=mchorse
-ARG USER_UID=1000
-ARG USER_GID=$USER_UID
-
-# Creating the user and usergroup
-RUN groupadd --gid $USER_GID $USERNAME \
-    && useradd --uid $USER_UID --gid $USERNAME -m $USERNAME \
-    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
-    && chmod 0440 /etc/sudoers.d/$USERNAME
-
-RUN chmod g+rw /home && \
-    mkdir -p /home/mchorse && \
-    mkdir -p /home/mchorse/.ssh && \
-    chown -R $USERNAME:$USERNAME /home/mchorse && \
-    chown -R $USERNAME:$USERNAME /home/mchorse/.ssh
-
-USER root
+## SSH
+# Set password
+RUN echo 'password' >> password.txt && \
+    mkdir /var/run/sshd && \
+    echo "root:`cat password.txt`" | chpasswd && \
+    # Allow root login with password
+    sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    # Prevent user being kicked off after login
+    sed -i 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' /etc/pam.d/sshd && \
+    echo 'AuthorizedKeysFile     .ssh/authorized_keys' >> /etc/ssh/sshd_config && \
+    echo 'PasswordAuthentication yes' >> /etc/ssh/sshd_config && \
+    # FIX SUDO BUG: https://github.com/sudo-project/sudo/issues/42
+    echo "Set disable_coredump false" >> /etc/sudo.conf && \
+    # Clean up
+    rm password.txt
 
 ## SSH config and bashrc
-RUN mkdir -p /home/mchorse/.ssh /job && \
-    echo 'Host *' > /home/mchorse/.ssh/config && \
-    echo '    StrictHostKeyChecking no' >> /home/mchorse/.ssh/config && \
-    echo 'export PDSH_RCMD_TYPE=ssh' >> /home/mchorse/.bashrc && \
-    echo 'export PATH=/home/mchorse/.local/bin:$PATH' >> /home/mchorse/.bashrc && \
-    echo 'export PATH=/usr/local/mpi/bin:$PATH' >> /home/mchorse/.bashrc && \
-    echo 'export LD_LIBRARY_PATH=/usr/local/lib:/usr/local/mpi/lib:/usr/local/mpi/lib64:$LD_LIBRARY_PATH' >> /home/mchorse/.bashrc
+RUN mkdir -p /home/root/.ssh /job && \
+    echo 'Host *' > /home/root/.ssh/config && \
+    echo '    StrictHostKeyChecking no' >> /home/root/.ssh/config && \
+    echo 'export PDSH_RCMD_TYPE=ssh' >> /home/root/.bashrc && \
+    echo 'export PATH=/home/root/.local/bin:$PATH' >> /home/root/.bashrc && \
+    echo 'export PATH=/usr/local/mpi/bin:$PATH' >> /home/root/.bashrc && \
+    echo 'export LD_LIBRARY_PATH=/usr/local/lib:/usr/local/mpi/lib:/usr/local/mpi/lib64:$LD_LIBRARY_PATH' >> /home/root/.bashrc
 
-### SSH
-# Create keys
-USER mchorse
-RUN ssh-keygen -b 2048 -t rsa -f ~/.ssh/id_rsa -q -N ""
-RUN cp ~/.ssh/id_rsa.pub ~/.ssh/authorized_keys
+# Generate keys for intra-pod ssh coms
+RUN ssh-keygen -b 2048 -t rsa -f /root/.ssh/id_rsa -q -N ""
+RUN cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys
 RUN echo "StrictHostKeyChecking no" > ~/.ssh/config
-RUN chmod 700 ~/.ssh/config
-USER root
+RUN chmod 700 /root/.ssh/config
 
 RUN pip install torch==1.10.2+cu113 torchvision==0.11.3+cu113 torchaudio===0.10.2+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html
 ## Install APEX
