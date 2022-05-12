@@ -120,7 +120,7 @@ USER $USERNAME
 
 ### SSH
 # Create keys
-RUN sudo chmod 700 /home/mchorse/.ssh
+RUN sudo chmod 700 /home/mchorse/
 RUN ssh-keygen -t rsa -N "" -f /home/mchorse/.ssh/id_rsa && sudo chmod 600 /home/mchorse/.ssh/id_rsa && sudo chmod 600 /home/mchorse/.ssh/id_rsa.pub
 RUN cp /home/mchorse/.ssh/id_rsa.pub /home/mchorse/.ssh/authorized_keys
 RUN eval `ssh-agent -s` && ssh-add /home/mchorse/.ssh/id_rsa
