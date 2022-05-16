@@ -125,7 +125,7 @@ RUN ssh-keygen -t rsa -N "" -f /home/mchorse/.ssh/id_rsa && sudo chmod 600 /home
 RUN cp /home/mchorse/.ssh/id_rsa.pub /home/mchorse/.ssh/authorized_keys
 RUN eval `ssh-agent -s` && ssh-add /home/mchorse/.ssh/id_rsa
 
-USER root
+ENV PATH=/opt/amazon/openmpi/bin/:/opt/amazon/efa/bin:$PATH
 
 ## SSH config and bashrc
 RUN mkdir -p /home/mchorse/.ssh /job && \
@@ -133,8 +133,8 @@ RUN mkdir -p /home/mchorse/.ssh /job && \
     echo '    StrictHostKeyChecking no' >> /home/mchorse/.ssh/config && \
     echo 'export PDSH_RCMD_TYPE=ssh' >> /home/mchorse/.bashrc && \
     echo 'export PATH=/home/mchorse/.local/bin:$PATH' >> /home/mchorse/.bashrc && \
-    echo 'export PATH=/usr/local/mpi/bin:$PATH' >> /home/mchorse/.bashrc && \
-    echo 'export LD_LIBRARY_PATH=/usr/local/lib:/usr/local/mpi/lib:/usr/local/mpi/lib64:$LD_LIBRARY_PATH' >> /home/mchorse/.bashrc
+    echo 'export PATH=/opt/amazon/openmpi/bin:$PATH' >> /home/mchorse/.bashrc && \
+    echo 'export LD_LIBRARY_PATH=/usr/local/lib:/opt/amazon/openmpi/lib:/opt/amazon/openmpi/lib64:$LD_LIBRARY_PATH' >> /home/mchorse/.bashrc
 
 
 RUN pip install torch==1.10.2+cu113 torchvision==0.11.3+cu113 torchaudio===0.10.2+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html
