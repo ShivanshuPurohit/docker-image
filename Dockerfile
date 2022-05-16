@@ -128,7 +128,7 @@ RUN eval `ssh-agent -s` && ssh-add /home/mchorse/.ssh/id_rsa
 ENV PATH=/opt/amazon/openmpi/bin/:/opt/amazon/efa/bin:$PATH
 
 ## SSH config and bashrc
-RUN mkdir -p /home/mchorse/.ssh /job && \
+RUN sudo mkdir -p /home/mchorse/.ssh /job && \
     echo 'Host *' > /home/mchorse/.ssh/config && \
     echo '    StrictHostKeyChecking no' >> /home/mchorse/.ssh/config && \
     echo 'export PDSH_RCMD_TYPE=ssh' >> /home/mchorse/.bashrc && \
