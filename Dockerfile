@@ -125,10 +125,10 @@ RUN ssh-keygen -t rsa -N "" -f /home/mchorse/.ssh/id_rsa && sudo chmod 600 /home
 RUN cp /home/mchorse/.ssh/id_rsa.pub /home/mchorse/.ssh/authorized_keys
 RUN eval `ssh-agent -s` && ssh-add /home/mchorse/.ssh/id_rsa
 
-ENV PATH=/opt/amazon/openmpi/bin/:/opt/amazon/efa/bin:$PATH
+USER root
 
 ## SSH config and bashrc
-RUN sudo mkdir -p /home/mchorse/.ssh /job && \
+RUN mkdir -p /home/mchorse/.ssh /job && \
     echo 'Host *' > /home/mchorse/.ssh/config && \
     echo '    StrictHostKeyChecking no' >> /home/mchorse/.ssh/config && \
     echo 'export PDSH_RCMD_TYPE=ssh' >> /home/mchorse/.bashrc && \
