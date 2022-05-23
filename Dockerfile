@@ -39,7 +39,7 @@ RUN apt-get install -y --allow-unauthenticated \
 
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 1
 
-RUN mkdir /var/run/sshd && \
+RUN touch /var/run/sshd && \
     # Prevent user being kicked off after login
     sed -i 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' /etc/pam.d/sshd && \
     echo 'AuthorizedKeysFile     .ssh/authorized_keys' >> /etc/ssh/sshd_config && \
