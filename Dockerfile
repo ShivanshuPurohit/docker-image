@@ -53,18 +53,6 @@ RUN curl https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py \
     && python /tmp/get-pip.py \
     && pip install awscli pynvml
 
-###################################################
-## Install NCCL-tests
-RUN git clone https://github.com/NVIDIA/nccl-tests.git /opt/nccl-tests \
-    && cd /opt/nccl-tests \
-    && git checkout ${NCCL_TESTS_VERSION} \
-    && make MPI=1 \
-       MPI_HOME=/opt/amazon/openmpi/ \
-       CUDA_HOME=/usr/local/cuda \
-       NCCL_HOME=/opt/nccl/build \
-       NVCC_GENCODE="-gencode=arch=compute_86,code=sm_86 -gencode=arch=compute_80,code=sm_80 -gencode=arch=compute_75,code=sm_75 -gencode=arch=compute_70,code=sm_70 -gencode=arch=compute_60,code=sm_60"
-ENV NCCL_PROTO simple
-RUN rm -rf /var/lib/apt/lists/*
 
 #### User account
 ARG USERNAME=mchorse
