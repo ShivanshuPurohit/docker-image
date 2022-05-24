@@ -71,25 +71,24 @@ RUN chmod g+rw /home && \
     chown -R $USERNAME:$USERNAME /home/mchorse && \
     chown -R $USERNAME:$USERNAME /home/mchorse/.ssh
 
-USER $USERNAME
+USER root
 
 ### SSH
 # Create keys
-RUN sudo chmod 700 /home/mchorse/.ssh
-RUN ssh-keygen -t rsa -N "" -f /home/mchorse/.ssh/id_rsa && sudo chmod 600 /home/mchorse/.ssh/id_rsa && sudo chmod 600 /home/mchorse/.ssh/id_rsa.pub
-RUN cp /home/mchorse/.ssh/id_rsa.pub /home/mchorse/.ssh/authorized_keys
-RUN eval `ssh-agent -s` && ssh-add /home/mchorse/.ssh/id_rsa
+RUN chmod 700 /root/.ssh
+RUN ssh-keygen -t rsa -N "" -f /root/.ssh/id_rsa && chmod 600 /root/.ssh/id_rsa && chmod 600 /root/.ssh/id_rsa.pub
+RUN cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys
+RUN eval `ssh-agent -s` && ssh-add /root/.ssh/id_rsa
 
-USER root
 
 ## SSH config and bashrc
-RUN mkdir -p /home/mchorse/.ssh /job && \
-    echo 'Host *' > /home/mchorse/.ssh/config && \
-    echo '    StrictHostKeyChecking no' >> /home/mchorse/.ssh/config && \
-    echo 'export PDSH_RCMD_TYPE=ssh' >> /home/mchorse/.bashrc && \
-    echo 'export PATH=/home/mchorse/.local/bin:$PATH' >> /home/mchorse/.bashrc && \
-    echo 'export PATH=/opt/amazon/openmpi/bin/:/opt/amazon/efa/bin:/usr/bin:/usr/local/bin:$PATH' >> /home/mchorse/.bashrc && \
-    echo 'export LD_LIBRARY_PATH=/usr/local/cuda/extras/CUPTI/lib64:/opt/amazon/openmpi/lib:/opt/nccl/build/lib:/opt/amazon/efa/lib:/opt/aws-ofi-nccl/install/lib:$LD_LIBRARY_PATH' >> /home/mchorse/.bashrc
+RUN mkdir -p /root/.ssh /job && \
+    echo 'Host *' > /root/.ssh/config && \
+    echo '    StrictHostKeyChecking no' >> /root/.ssh/config && \
+    echo 'export PDSH_RCMD_TYPE=ssh' >> /root/.bashrc && \
+    echo 'export PATH=/home/mchorse/.local/bin:$PATH' >> /root/.bashrc && \
+    echo 'export PATH=/opt/amazon/openmpi/bin/:/opt/amazon/efa/bin:/usr/bin:/usr/local/bin:$PATH' >> /root/.bashrc && \
+    echo 'export LD_LIBRARY_PATH=/usr/local/cuda/extras/CUPTI/lib64:/opt/amazon/openmpi/lib:/opt/nccl/build/lib:/opt/amazon/efa/lib:/opt/aws-ofi-nccl/install/lib:$LD_LIBRARY_PATH' >> /root/.bashrc
 
 
 RUN pip install torch==1.10.2+cu113 torchvision==0.11.3+cu113 torchaudio===0.10.2+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html
@@ -104,9 +103,7 @@ RUN git clone https://github.com/EleutherAI/gpt-neox.git $HOME/gpt-neox \
     && cd $HOME/gpt-neox/ \
     && pip install -r requirements/requirements.txt && pip3 install -r requirements/requirements-onebitadam.txt && pip3 install -r requirements/requirements-sparseattention.txt && pip cache purge
 
-# mchorse
-USER mchorse
-WORKDIR /home/mchorse
+WORKDIR /root
 
 # For intrapod ssh
 EXPOSE 22
@@ -115,4 +112,4 @@ EXPOSE 22
 COPY ./entrypoint.sh ./entrypoint.sh
 RUN sudo chmod +x ./entrypoint.sh
 ENTRYPOINT [ "./entrypoint.sh" ]
-USER root
+
