@@ -75,6 +75,7 @@ USER root
 
 ### SSH
 # Create keys
+RUN mkdir -p /root/.ssh
 RUN chmod 700 /root/.ssh
 RUN ssh-keygen -t rsa -N "" -f /root/.ssh/id_rsa && chmod 600 /root/.ssh/id_rsa && chmod 600 /root/.ssh/id_rsa.pub
 RUN cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys
