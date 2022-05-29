@@ -10,7 +10,6 @@ RUN apt-get install -y --no-install-recommends ca-certificates && \
 rm -rf /var/lib/apt/lists/* \
 && update-ca-certificates
 
-RUN add-apt-repository ppa:deadsnakes/ppa
 RUN apt-get update -y
 
 #Install core packages
