@@ -103,7 +103,7 @@ RUN pip install gpustat protobuf~=3.19.0
 ## we use the latest git clone and edit the setup.py, to disable the check around line 102
 RUN git clone https://github.com/NVIDIA/apex.git $HOME/apex \
     && cd $HOME/apex/ \
-    && pip3 install -v --disable-pip-version-check --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" ./
+    && pip install -v --disable-pip-version-check --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" ./
 
 RUN git clone https://github.com/EleutherAI/gpt-neox.git $HOME/gpt-neox \
     && cd $HOME/gpt-neox/ \
