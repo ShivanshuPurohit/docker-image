@@ -110,7 +110,7 @@ RUN git clone https://github.com/EleutherAI/gpt-neox.git $HOME/gpt-neox \
     && chmod -R 777 $HOME/gpt-neox/ \
     && python3.9 -m pip install -r requirements/requirements.txt && python3.9 -m pip install -r requirements/requirements-onebitadam.txt && python3.9 -m pip install -r requirements/requirements-sparseattention.txt && python3.9 -m pip cache purge
 COPY helpers/fused_kernels-0.0.1-cp38-cp38-linux_x86_64.whl $HOME/fused_kernels-0.0.1-cp38-cp38-linux_x86_64.whl
-RUN python3.9 -m pip install fused_kernels-0.0.1-cp38-cp38-linux_x86_64.whl
+#RUN python3.9 -m pip install fused_kernels-0.0.1-cp38-cp38-linux_x86_64.whl
 
 # mchorse
 USER mchorse
