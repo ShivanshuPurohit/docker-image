@@ -36,7 +36,11 @@ RUN apt-get install -y --allow-unauthenticated \
     apt-utils \
     python3-dev \
     pdsh \
-    nano
+    nano \
+    software-properties-common
+    
+RUN add-apt-repository ppa:deadsnakes/ppa
+RUN apt-get update -y
 
 RUN apt install python3.9 python3.9-dev python3.9-pip python3.9-venv
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.9 1
