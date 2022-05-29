@@ -41,7 +41,7 @@ RUN apt-get install -y --allow-unauthenticated \
 RUN add-apt-repository ppa:deadsnakes/ppa
 RUN apt-get update -y
 
-RUN apt install python3.9 -y
+RUN apt install python3.9 python3.9-venv -y
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.9 1
 RUN touch /var/run/sshd && \
     # Prevent user being kicked off after login
@@ -101,9 +101,9 @@ RUN pip install gpustat protobuf~=3.19.0
 
 ## Install APEX
 ## we use the latest git clone and edit the setup.py, to disable the check around line 102
-RUN git clone https://github.com/NVIDIA/apex.git $HOME/apex \
-    && cd $HOME/apex/ \
-    && pip install -v --disable-pip-version-check --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" ./
+#RUN git clone https://github.com/NVIDIA/apex.git $HOME/apex \
+#    && cd $HOME/apex/ \
+#    && pip install -v --disable-pip-version-check --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" ./
 
 RUN git clone https://github.com/EleutherAI/gpt-neox.git $HOME/gpt-neox \
     && cd $HOME/gpt-neox/ \
