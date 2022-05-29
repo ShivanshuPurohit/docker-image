@@ -41,7 +41,7 @@ RUN apt-get install -y --allow-unauthenticated \
 RUN add-apt-repository ppa:deadsnakes/ppa
 RUN apt-get update -y
 
-RUN apt install python3.9 python3.9-dev python3.9-venv
+RUN apt install python3.9
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.9 1
 RUN touch /var/run/sshd && \
     # Prevent user being kicked off after login
