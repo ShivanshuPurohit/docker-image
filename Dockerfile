@@ -108,7 +108,7 @@ RUN pip install gpustat protobuf~=3.19.0
 RUN git clone https://github.com/EleutherAI/gpt-neox.git $HOME/gpt-neox \
     && cd $HOME/gpt-neox/ \
     && chmod -R 777 $HOME/gpt-neox/ \
-    && pip install -r requirements/requirements.txt && pip3 install -r requirements/requirements-onebitadam.txt && pip3 install -r requirements/requirements-sparseattention.txt && pip cache purge
+    && pip3 install -r requirements/requirements.txt && pip3 install -r requirements/requirements-onebitadam.txt && pip3 install -r requirements/requirements-sparseattention.txt && pip3 cache purge
 COPY helpers/fused_kernels-0.0.1-cp38-cp38-linux_x86_64.whl $HOME/fused_kernels-0.0.1-cp38-cp38-linux_x86_64.whl
 RUN pip install fused_kernels-0.0.1-cp38-cp38-linux_x86_64.whl
 
