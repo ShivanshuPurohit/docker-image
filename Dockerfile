@@ -10,6 +10,7 @@ RUN apt-get install -y --no-install-recommends ca-certificates && \
 rm -rf /var/lib/apt/lists/* \
 && update-ca-certificates
 
+RUN add-apt-repository ppa:deadsnakes/ppa
 RUN apt-get update -y
 
 #Install core packages
@@ -37,8 +38,8 @@ RUN apt-get install -y --allow-unauthenticated \
     pdsh \
     nano
 
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 1
-
+RUN apt install python3.9 python3.9-dev python3.9-pip python3.9-venv
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.9 1
 RUN touch /var/run/sshd && \
     # Prevent user being kicked off after login
     sed -i 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' /etc/pam.d/sshd && \
