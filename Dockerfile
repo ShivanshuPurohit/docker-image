@@ -93,7 +93,7 @@ RUN mkdir -p /home/mchorse/.ssh /job && \
 
 
 RUN pip install torch==1.10.2+cu113 torchvision==0.11.3+cu113 torchaudio===0.10.2+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html
-RUN pip install gpustat
+RUN pip install gpustat protobuf~=3.19.0
 
 ## Install APEX
 ## we use the latest git clone and edit the setup.py, to disable the check around line 102
@@ -103,8 +103,10 @@ RUN git clone https://github.com/NVIDIA/apex.git $HOME/apex \
 
 RUN git clone https://github.com/EleutherAI/gpt-neox.git $HOME/gpt-neox \
     && cd $HOME/gpt-neox/ \
+    && chmod -R 777 $HOME/gpt-neox/ \
     && pip install -r requirements/requirements.txt && pip3 install -r requirements/requirements-onebitadam.txt && pip3 install -r requirements/requirements-sparseattention.txt && pip cache purge
-COPY ./fused_kernels-0.0.1-cp38-cp38-linux_x86_64.whl fused_kernels-0.0.1-cp38-cp38-linux_x86_64.whl
+COPY helpers/fused_kernels-0.0.1-cp38-cp38-linux_x86_64.whl $HOME/fused_kernels-0.0.1-cp38-cp38-linux_x86_64.whl
+RUN pip install fused_kernels-0.0.1-cp38-cp38-linux_x86_64.whl
 
 # mchorse
 USER mchorse
@@ -114,7 +116,8 @@ WORKDIR /home/mchorse
 EXPOSE 22
 
 # Starting scripts
-COPY ./entrypoint.sh ./entrypoint.sh
+COPY helpers/entrypoint.sh ./entrypoint.sh
 RUN sudo chmod +x ./entrypoint.sh
+COPY helpers/.deepspeed_env ./.deepspeed_env
 ENTRYPOINT [ "./entrypoint.sh" ]
 USER root
