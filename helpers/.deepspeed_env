@@ -1,0 +1,5 @@
+FI_PROVIDER=efa
+FI_EFA_USE_DEVICE_RDMA=1
+NCCL_DEBUG=info
+RDMAV_FORK_SAFE=1
+LD_PRELOAD=/opt/nccl/build/lib/libnccl.so
