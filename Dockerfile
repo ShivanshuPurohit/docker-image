@@ -35,10 +35,14 @@ RUN apt-get install -y --allow-unauthenticated \
     apt-utils \
     python3-dev \
     pdsh \
-    nano
+    nano \
+    software-properties-common
+    
+RUN add-apt-repository ppa:deadsnakes/ppa
+RUN apt-get update -y
 
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 1
-
+RUN apt install python3.9 python3.9-venv python3.9-dev -y
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.9 1
 RUN touch /var/run/sshd && \
     # Prevent user being kicked off after login
     sed -i 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' /etc/pam.d/sshd && \
@@ -92,21 +96,21 @@ RUN mkdir -p /home/mchorse/.ssh /job && \
     echo 'export LD_LIBRARY_PATH=/usr/local/cuda/extras/CUPTI/lib64:/opt/amazon/openmpi/lib:/opt/nccl/build/lib:/opt/amazon/efa/lib:/opt/aws-ofi-nccl/install/lib:$LD_LIBRARY_PATH' >> /home/mchorse/.bashrc
 
 
-RUN pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu113
-RUN pip install gpustat protobuf~=3.19.0
+RUN python3.9 -m pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu113
+RUN python3.9 -m pip install gpustat protobuf~=3.19.0
 
 ## Install APEX
 ## we use the latest git clone and edit the setup.py, to disable the check around line 102
 RUN git clone https://github.com/NVIDIA/apex.git $HOME/apex \
     && cd $HOME/apex/ \
-    && pip3 install -v --disable-pip-version-check --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" ./
+    && python3.9 -m pip install -v --disable-pip-version-check --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" ./
 
 RUN git clone https://github.com/EleutherAI/gpt-neox.git $HOME/gpt-neox \
     && cd $HOME/gpt-neox/ \
     && chmod -R 777 $HOME/gpt-neox/ \
-    && pip install -r requirements/requirements.txt && pip3 install -r requirements/requirements-onebitadam.txt && pip3 install -r requirements/requirements-sparseattention.txt && pip cache purge
+    && python3.9 -m pip install -r requirements/requirements.txt && python3.9 -m pip install -r requirements/requirements-onebitadam.txt && python3.9 -m pip install -r requirements/requirements-sparseattention.txt && python3.9 -m pip cache purge
 COPY helpers/fused_kernels-0.0.1-cp38-cp38-linux_x86_64.whl $HOME/fused_kernels-0.0.1-cp38-cp38-linux_x86_64.whl
-RUN pip install fused_kernels-0.0.1-cp38-cp38-linux_x86_64.whl
+#RUN python3.9 -m pip install fused_kernels-0.0.1-cp38-cp38-linux_x86_64.whl
 
 # mchorse
 USER mchorse
