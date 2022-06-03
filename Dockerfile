@@ -118,7 +118,7 @@ RUN sudo chmod +x ./entrypoint.sh
 COPY helpers/.deepspeed_env ./.deepspeed_env
 ENTRYPOINT [ "./entrypoint.sh" ]
 USER root
-COPY helpers/requirements.txt ./requirements.txt
+COPY helpers/requirements.txt .
 RUN pip install -r reqirememnts.txt
-COPY helpers/fused_kernels-0.0.1-cp38-cp38-linux_x86_64.whl ./fused_kernels-0.0.1-cp38-cp38-linux_x86_64.whl
+COPY helpers/fused_kernels-0.0.1-cp38-cp38-linux_x86_64.whl .
 RUN pip install fused_kernels-0.0.1-cp38-cp38-linux_x86_64.whl
