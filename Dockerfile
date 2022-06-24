@@ -114,7 +114,10 @@ EXPOSE 22
 
 # Starting scripts
 COPY helpers/entrypoint.sh ./entrypoint.sh
+COPY helpers/gpumon.sh ./gpumon.sh
 RUN sudo chmod +x ./entrypoint.sh
+RUN sudo chmod +x ./gpumon.sh
+RUN bash ./gpumon.sh
 COPY helpers/.deepspeed_env ./.deepspeed_env
 ENTRYPOINT [ "./entrypoint.sh" ]
 USER root
