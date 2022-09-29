@@ -103,10 +103,7 @@ RUN git clone https://github.com/NVIDIA/apex.git $HOME/apex \
 
 RUN git clone https://github.com/EleutherAI/gpt-neox.git $HOME/gpt-neox \
     && cd $HOME/gpt-neox/ \
-    && chmod -R 777 $HOME/gpt-neox/ \
-    && pip install -r requirements/requirements.txt && pip3 install -r requirements/requirements-onebitadam.txt && pip3 install -r requirements/requirements-sparseattention.txt && pip cache purge
-COPY helpers/fused_kernels-0.0.1-cp38-cp38-linux_x86_64.whl $HOME/fused_kernels-0.0.1-cp38-cp38-linux_x86_64.whl
-RUN pip install fused_kernels-0.0.1-cp38-cp38-linux_x86_64.whl
+    && chmod -R 777 $HOME/gpt-neox/
 
 # mchorse
 USER mchorse
@@ -117,7 +114,14 @@ EXPOSE 22
 
 # Starting scripts
 COPY helpers/entrypoint.sh ./entrypoint.sh
+COPY helpers/gpumon.sh ./gpumon.sh
 RUN sudo chmod +x ./entrypoint.sh
+RUN sudo chmod +x ./gpumon.sh
+RUN bash ./gpumon.sh
 COPY helpers/.deepspeed_env ./.deepspeed_env
 ENTRYPOINT [ "./entrypoint.sh" ]
 USER root
+COPY helpers/requirements.txt .
+RUN pip install -r requirements.txt
+COPY helpers/fused_kernels-0.0.1-cp38-cp38-linux_x86_64.whl .
+RUN pip install fused_kernels-0.0.1-cp38-cp38-linux_x86_64.whl
